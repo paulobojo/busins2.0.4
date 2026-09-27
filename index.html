@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="pt-PT">
 <head>
 <meta charset="UTF-8">
@@ -194,6 +194,7 @@ button{font:inherit; color:inherit; border:0; background:none; padding:0; cursor
 .sjmWarn{margin:14px 22px; padding:12px 14px; background:#FCEBC9; color:#6B3B00; font-size:13.5px; line-height:1.45;}
 .sjmWarn b{color:#6B3B00;}
 .opt.sjm .tt{color:var(--sub);}
+.pSegWrap{padding:18px 0 4px;}
 </style>
 </head>
 <body>
@@ -220,10 +221,11 @@ button{font:inherit; color:inherit; border:0; background:none; padding:0; cursor
   </div>
 
   <div class="view" id="viewPorto" hidden>
-    <div class="sec" style="padding-top:30px"><div class="ttl">Mais rápido agora</div><div class="m" id="pDay"></div></div>
+    <div class="sec" style="padding-top:30px"><div class="ttl" id="pTtl">Mais rápido agora</div><div class="m" id="pDay"></div></div>
     <div class="rule"></div>
     <div id="pDirBox"></div>
     <div id="pPer"></div>
+    <div class="pSegWrap"><div class="seg" id="pSeg"><div class="segThumb" id="pThumb"></div></div></div>
     <div id="pSjmTop"></div>
     <div id="pBest"></div>
     <div id="pOtherHead"><div class="sec"><div class="ttl">Outras opções</div><div class="m" id="pCount"></div></div>
@@ -373,7 +375,7 @@ const OAZ_VDC = [
 ];
 const MIN_XFER = 5; // minutos mínimos para a troca
 const TIGHT = 10;   // abaixo disto, avisar que a troca é apertada
-let pstate = { dir:"ida", per:"esc", spin:false };
+let pstate = { dir:"ida", per:"esc", spin:false, day:today() };
 
 function fromMin(m){ return pad(Math.floor(m/60))+":"+pad(m%60); }
 function durTxt(m){ const h=Math.floor(m/60), r=m%60; return h ? `${h}h${r?pad(r):""}` : `${r} min`; }
@@ -435,8 +437,8 @@ function portoOptions(dayType){
   return uniq.sort((a,b)=>a.dep-b.dep);
 }
 /* Depois da última ligação possível para Vale de Cambra: autocarros do Porto que só chegam a S. João da Madeira */
-function sjmOnlyToday(){
-  const dt=today(), now=nowMin(), out=[];
+function sjmOnlyToday(dt, now){
+  const out=[];
   if(dt!=="du") return out;
   if(pstate.dir==="volta"){
     const all = portoOptions(dt);
@@ -465,15 +467,16 @@ function sjmOnlyToday(){
   }
   return out.sort((a,b)=>a.dep-b.dep);
 }
-function sjmHTML(list, top){
+function sjmHTML(list, top, isSel){
   if(!list.length) return "";
+  const hj = isSel ? "hoje" : "neste dia";
   const ida = pstate.dir==="ida";
   const title = ida ? "Só desde S. João da Madeira" : "Só até S. João da Madeira";
-  const wk = today()!=="du";
+  const wk = false;
   const warn = ida
-    ? `<b>Atenção:</b> ${top?"hoje já não há ligação desde Vale de Cambra.":(wk?"ao fim de semana há poucos autocarros de Vale de Cambra para S. João da Madeira, por isso nem todos estes têm ligação.":"depois das opções acima já não há ligação desde Vale de Cambra.")} Estes autocarros partem de <b>S. João da Madeira (CCT)</b> — tens de chegar lá por outra forma (boleia, táxi…).`
-    : `<b>Atenção:</b> ${top?"hoje já não há ligação para Vale de Cambra.":"depois das opções acima já não há ligação para Vale de Cambra."} Estes autocarros só te levam até <b>S. João da Madeira (CCT)</b> — a partir daí vais precisar de outra forma de chegar a casa (boleia, táxi…).`;
-  return `<div class="sec"><div class="ttl">${title}</div><div class="m">${list.length} hoje</div></div>
+    ? `<b>Atenção:</b> ${top?hj+" já não há ligação desde Vale de Cambra.":(wk?"ao fim de semana há poucos autocarros de Vale de Cambra para S. João da Madeira, por isso nem todos estes têm ligação.":"depois das opções acima já não há ligação desde Vale de Cambra.")} Estes autocarros partem de <b>S. João da Madeira (CCT)</b> — tens de chegar lá por outra forma (boleia, táxi…).`
+    : `<b>Atenção:</b> ${top?hj+" já não há ligação para Vale de Cambra.":"depois das opções acima já não há ligação para Vale de Cambra."} Estes autocarros só te levam até <b>S. João da Madeira (CCT)</b> — a partir daí vais precisar de outra forma de chegar a casa (boleia, táxi…).`;
+  return `<div class="sec"><div class="ttl">${title}</div><div class="m">${list.length} ${hj}</div></div>
     <div class="rule"></div>
     <div class="sjmWarn">${warn}</div>
     ${list.map((o,i)=>`<button class="opt sjm" data-s="${i}">
@@ -496,9 +499,24 @@ function nextDayWithService(){
   for(let k=1;k<=7;k++){ const d=new Date(base); d.setDate(base.getDate()+k); const key=dayKey(d); if(portoOptions(key).length) return {k, wd:d.getDay(), key}; }
 }
 
+function renderPSeg(){
+  const seg=document.getElementById("pSeg");
+  seg.querySelectorAll(".segBtn").forEach(x=>x.remove());
+  const keys=Object.keys(DAYS);
+  keys.forEach(d=>{
+    const btn=document.createElement("button");
+    btn.className="segBtn"+(d===pstate.day?" active":"");
+    btn.innerHTML=DAYS[d]+(d===today()?'<span class="td">hoje</span>':"");
+    btn.onclick=()=>{ pstate.day=d; renderPorto(); };
+    seg.appendChild(btn);
+  });
+  document.getElementById("pThumb").style.transform=`translateX(${keys.indexOf(pstate.day)*100}%)`;
+}
+
 function renderPorto(){
-  const now=nowMin(), dt=today();
-  document.getElementById("pDay").textContent = "Hoje · " + DAYS[dt];
+  const dt=pstate.day, isSel = dt===today(), now = isSel ? nowMin() : -1;
+  document.getElementById("pDay").textContent = (isSel?"Hoje · ":"") + DAYS[dt];
+  document.getElementById("pTtl").textContent = isSel ? "Mais rápido agora" : "Mais rápido";
   const home = dt==="du" ? "Vale de Cambra" : "S. João da Madeira";
   const [a,b] = pstate.dir==="ida" ? [home,"Porto"] : ["Porto",home];
   document.getElementById("pDirBox").innerHTML = `<div class="pDir row on" style="border-bottom:1px solid var(--rule)">
@@ -512,33 +530,29 @@ function renderPorto(){
     setTimeout(renderPorto, 170);
   };
   document.getElementById("pPer").innerHTML = "";
+  renderPSeg();
 
-  let opts = portoOptions(dt).filter(o=>o.dep>=now);
-  let dayLbl = "", isToday = true;
-  if(!opts.length){
-    const nd = nextDayWithService(); isToday=false;
-    dayLbl = !nd ? "" : nd.k===1 ? "amanhã" : ["domingo","segunda-feira","terça-feira","quarta-feira","quinta-feira","sexta-feira","sábado"][nd.wd];
-    opts = nd ? portoOptions(nd.key) : [];
-  }
-  const sjmL = sjmOnlyToday();
+  const opts = portoOptions(dt).filter(o=>o.dep>=now);
+  const hasOpts = opts.length>0;
+  const sjmL = sjmOnlyToday(dt, now);
   const sT=document.getElementById("pSjmTop"), sB=document.getElementById("pSjmBottom");
-  sT.innerHTML = !isToday ? sjmHTML(sjmL, true) : "";
-  sB.innerHTML = isToday ? sjmHTML(sjmL, false) : "";
+  sT.innerHTML = !hasOpts ? sjmHTML(sjmL, true, isSel) : "";
+  sB.innerHTML = hasOpts ? sjmHTML(sjmL, false, isSel) : "";
   [sT,sB].forEach(box=> box.querySelectorAll(".opt.sjm").forEach(x=> x.onclick=()=> openTrip(sjmL[+x.dataset.s])));
   const best = document.getElementById("pBest"), list=document.getElementById("pList");
-  document.getElementById("pOtherHead").hidden = !isToday;
-  if(!isToday){
-    best.innerHTML = sjmL.length ? "" : `<div class="pNone"><div class="a">Hoje já não há autocarros</div></div>`;
-    list.innerHTML = ""; return;
+  document.getElementById("pOtherHead").hidden = !hasOpts;
+  if(!hasOpts){
+    best.innerHTML = sjmL.length ? "" : `<div class="pNone"><div class="a">${isSel?"Hoje já não há autocarros":"Não há autocarros neste dia"}</div></div>`;
+    list.innerHTML = ""; setPNote(dt); return;
   }
-  if(!opts.length){ best.innerHTML = `<div class="pNone"><div class="a">Sem ligações</div></div>`; list.innerHTML=""; return; }
+  const isToday = isSel, dayLbl = "neste dia";
   const o0 = opts[0];
   const d = o0.dep-now, h=Math.floor(d/60), m=d%60;
-  const inTxt = !isToday ? dayLbl : d<=0 ? "Agora" : "daqui a " + (h ? `${h}h${m?pad(m):""}` : `${m} min`);
+  const inTxt = !isToday ? DAYS[dt] : d<=0 ? "Agora" : "daqui a " + (h ? `${h}h${m?pad(m):""}` : `${m} min`);
   best.innerHTML = `
     <button class="best" id="bestBtn">
-      <div class="bestK">${isToday ? "A melhor opção" : "Primeira de " + dayLbl}</div>
-      <div class="nxTop"><span class="nxTime num">${fromMin(o0.dep)}</span><span class="nxIn">${inTxt}</span></div>
+      <div class="bestK">${isToday ? "A melhor opção" : "Primeira do dia"}</div>
+      <div class="nxTop"><span class="nxTime num">${fromMin(o0.dep)}</span>${isToday?`<span class="nxIn">${inTxt}</span>`:""}</div>
       <div class="bestArr">${pstate.dir==="ida" ? `Chegas a ${destName(o0)} às <b class="num">${fromMin(o0.arr)}</b>` : `Sai de ${destName(o0)} · chegas${o0.wk?" a S. João da Madeira":""} às <b class="num">${fromMin(o0.arr)}</b>`} · ${durTxt(o0.arr-o0.dep)}</div>
       <div class="legs">${legsHTML(o0)}</div>
     </button>`;
@@ -550,6 +564,9 @@ function renderPorto(){
       <div class="du">${durTxt(o.arr-o.dep)}<br><span style="color:var(--ink)">${pstate.dir==="ida"?"":"de "}${destName(o).replace("Porto (","").replace(")","")}</span></div></button>`).join("")
     : `<div class="pNone"><div class="b">Não há mais opções ${isToday?"hoje":dayLbl}.</div></div>`;
   list.querySelectorAll(".opt").forEach(x=> x.onclick=()=> openTrip(opts[+x.dataset.i]));
+  setPNote(dt);
+}
+function setPNote(dt){
   document.getElementById("pNote").innerHTML = dt!=="du"
     ? `<b>Nota</b> — Ao fim de semana só aparecem os autocarros entre <b style="color:var(--ink)">S. João da Madeira (CCT)</b> e o Porto: 1410 (Campanhã) e 2026 (Camélias).`
     : pstate.dir==="volta"
@@ -582,7 +599,7 @@ function setTab(v){
   document.getElementById("tabThumb").style.transform = `translateX(${v==="porto"?100:0}%)`;
   document.getElementById("viewLinhas").hidden = v!=="linhas";
   document.getElementById("viewPorto").hidden = v!=="porto";
-  if(v==="porto") renderPorto();
+  if(v==="porto"){ pstate.day=today(); renderPorto(); }
 }
 document.querySelectorAll(".tab").forEach(t=> t.onclick=()=>setTab(t.dataset.v));
 setInterval(()=>{ if(!document.getElementById("viewPorto").hidden) renderPorto(); }, 30000);
