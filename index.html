@@ -235,13 +235,127 @@ button{font:inherit; color:inherit; border:0; background:none; padding:0; cursor
 .seg .segBtn{min-height:36px !important; padding:7px 4px !important; font-size:13px !important;}
 .seg .segBtn .td{font-size:8.5px !important;}
 .pSegWrap{padding:14px 0 0 !important;}
+/* ===== barra de separadores no fundo ===== */
+.top{padding:26px 22px 0 !important;}
+body{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 100px) !important;}
+.tabbar{position:fixed; left:0; right:0; bottom:0; z-index:15; display:flex; justify-content:center; gap:0;
+  background:rgba(236,236,234,.88); -webkit-backdrop-filter:saturate(180%) blur(20px); backdrop-filter:saturate(180%) blur(20px);
+  border-top:1px solid var(--rule); padding:8px 0 calc(env(safe-area-inset-bottom,0px) + 8px);}
+.tabbar .tab{flex:0 1 160px; display:flex; flex-direction:column; align-items:center; gap:4px; padding:4px 0; color:#9A9A97; font-size:11.5px; font-weight:600; text-align:center; background:none; border:0;}
+.tabbar .tab svg{width:26px; height:26px;}
+.tabbar .tab.active{color:var(--ink);}
+.tabbar .tab:active{opacity:.6;}
+/* barra em pílula preta */
+.tabbar{left:50% !important; right:auto !important; transform:translateX(-50%); width:calc(100% - 44px); max-width:420px;
+  bottom:calc(env(safe-area-inset-bottom,0px) + 12px) !important; padding:5px !important; gap:0 !important;
+  background:var(--ink) !important; border:0 !important; border-radius:40px !important;
+  -webkit-backdrop-filter:none !important; backdrop-filter:none !important; box-shadow:0 8px 24px rgba(0,0,0,.18);}
+.tabbar .tab{flex:1 1 0 !important; flex-direction:row !important; justify-content:center; gap:8px !important;
+  padding:11px 6px !important; border-radius:40px; color:#fff !important; font-size:14px !important; font-weight:500 !important; transition:background .25s, color .25s;}
+.tabbar .tab svg{width:20px !important; height:20px !important;}
+.tabbar .tab.active{background:#F4F4F2; color:var(--ink) !important; font-weight:600 !important;}
+body{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 110px) !important;}
+/* barra de ponta a ponta, fundo preto */
+.tabbar{left:0 !important; right:0 !important; transform:none !important; width:auto !important; max-width:none !important;
+  bottom:0 !important; border-radius:22px 22px 0 0 !important; box-shadow:0 -6px 20px rgba(0,0,0,.12) !important;
+  padding:8px 22px calc(env(safe-area-inset-bottom,0px) + 8px) !important; gap:8px !important;}
+.tabbar .tab{flex:0 1 180px !important; flex-direction:column !important; gap:3px !important; padding:8px 6px !important; border-radius:16px !important; font-size:12px !important;}
+.tabbar .tab svg{width:22px !important; height:22px !important;}
+body{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 100px) !important;}
+/* barra sem cantos, selecionado até às bordas */
+.tabbar{border-radius:0 !important; padding:0 !important; gap:0 !important; box-shadow:0 -4px 16px rgba(0,0,0,.10) !important;}
+.tabbar .tab{flex:1 1 50% !important; max-width:none !important; border-radius:0 !important;
+  padding:10px 6px calc(env(safe-area-inset-bottom,0px) + 10px) !important;}
+body{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 110px) !important;}
+.wrap{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 96px) !important;}
+body{padding-bottom:0 !important;}
+html,body{height:auto !important;}
+/* contorno preto à volta do selecionado */
+.tabbar{padding:6px 6px calc(env(safe-area-inset-bottom,0px) + 6px) !important; gap:6px !important;}
+.tabbar .tab{border-radius:0 !important; padding:9px 6px !important;}
+/* ===== raio único de 12px + barra mais leve ===== */
+:root{--r:12px;}
+.seg{border-radius:calc(var(--r) + 3px) !important;}
+.seg .segThumb{border-radius:var(--r) !important;}
+.inv{border-radius:var(--r) !important;}
+.t{border-radius:var(--r) !important;}
+.nxIn, .inPill{border-radius:var(--r) !important;}
+.chip, .nxLine{border-radius:6px !important;}
+.tight{border-radius:8px !important;}
+.close{border-radius:var(--r) !important;}
+.tabbar{padding:5px 6px calc(env(safe-area-inset-bottom,0px) + 5px) !important; gap:6px !important;}
+.tabbar .tab{border-radius:var(--r) !important; padding:7px 6px !important; gap:2px !important; font-size:11.5px !important; color:rgba(255,255,255,.6) !important;}
+.tabbar .tab svg{width:20px !important; height:20px !important;}
+.tabbar .tab.active{color:var(--ink) !important;}
+.wrap{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 86px) !important;}
+/* ===== barra flutuante igual à dos dias ===== */
+.tabbar{left:22px !important; right:22px !important; transform:none !important; width:auto !important; max-width:476px !important; margin:0 auto;
+  bottom:calc(env(safe-area-inset-bottom,0px) + 10px) !important; padding:3px !important; gap:0 !important;
+  border-radius:calc(var(--r) + 3px) !important; box-shadow:0 8px 24px rgba(0,0,0,.18) !important;}
+.tabbar .tab{flex-direction:row !important; gap:7px !important; padding:10px 6px !important; border-radius:var(--r) !important; font-size:13px !important;}
+.tabbar .tab svg{width:18px !important; height:18px !important;}
+.wrap{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 90px) !important;}
+/* barra translúcida com desfocagem */
+.tabbar{background:rgba(17,17,17,.92) !important; -webkit-backdrop-filter:saturate(180%) blur(20px) !important; backdrop-filter:saturate(180%) blur(20px) !important; border:1px solid rgba(255,255,255,.08) !important;}
+/* barra mais alta, ícone por cima */
+.tabbar .tab{flex-direction:column !important; gap:4px !important; padding:10px 6px 9px !important; font-size:12px !important;}
+.tabbar .tab svg{width:22px !important; height:22px !important;}
+.wrap{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 104px) !important;}
+/* ===== afinações ===== */
+.grid{padding:0 22px !important;}
+.t.past{padding:6px 0 !important; font-size:15px !important;}
+.nxLine{display:table !important; margin:0 0 8px !important;}
+#viewLinhas .hint{display:none !important;}
+#sheet{border-radius:22px 22px 0 0 !important; padding-top:10px !important;}
+#sheet .handle{width:38px; height:5px; border-radius:3px; background:var(--faint); margin:0 auto 14px;}
+.close{background:var(--soft) !important; color:var(--ink) !important; border-radius:var(--r) !important;}
+.sTop .k{color:var(--sub) !important;}
+.sBig{font-weight:500 !important;}
+.stop.end .nm, .stop.end .tm{color:var(--ink) !important; font-weight:600 !important;}
+.stop.end .n{color:var(--acc) !important;}
+.logo{font-size:34px !important; letter-spacing:-.035em !important;}
+.top{padding:28px 22px 2px !important;}
+/* ===== barra clara, estilo iOS ===== */
+.tabbar{background:rgba(250,250,248,.86) !important; -webkit-backdrop-filter:saturate(180%) blur(20px) !important; backdrop-filter:saturate(180%) blur(20px) !important;
+  border:1px solid rgba(0,0,0,.06) !important; box-shadow:0 6px 24px rgba(0,0,0,.10) !important;}
+.tabbar .tab{color:#9A9A97 !important; background:transparent !important;}
+.tabbar .tab.active{background:transparent !important; color:var(--ink) !important; font-weight:700 !important;}
+/* barra clara de ponta a ponta */
+.tabbar{left:0 !important; right:0 !important; max-width:none !important; margin:0 !important; bottom:0 !important;
+  border-radius:0 !important; border:0 !important; border-top:1px solid rgba(0,0,0,.08) !important; box-shadow:none !important;
+  padding:6px 22px calc(env(safe-area-inset-bottom,0px) + 6px) !important;}
+.tabbar .tab{flex:0 1 180px !important;}
+.tabbar{justify-content:space-around !important;}
+.wrap{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 90px) !important;}
+/* barra mais evidente */
+.tabbar{background:rgba(255,255,255,.96) !important; border-top:1px solid rgba(0,0,0,.14) !important; box-shadow:0 -4px 16px rgba(0,0,0,.06) !important; padding-top:0 !important;}
+.tabbar .tab{position:relative; color:#6E6E6B !important; padding-top:12px !important;}
+.tabbar .tab svg{width:24px !important; height:24px !important;}
+.tabbar .tab.active{color:var(--ink) !important;}
+.tabbar .tab.active::before{content:""; position:absolute; top:0; left:50%; transform:translateX(-50%); width:36px; height:3px; border-radius:0 0 3px 3px; background:var(--ink);}
+.tabbar .tab.active{color:var(--acc) !important;}
+.tabbar .tab.active::before{background:var(--acc) !important;}
+/* ===== versão: botão no topo ===== */
+.top .tabbar{position:static !important; transform:none !important; left:auto !important; right:auto !important; bottom:auto !important;
+  width:auto !important; max-width:none !important; margin:0 !important; display:flex !important; gap:0 !important;
+  background:var(--ink) !important; -webkit-backdrop-filter:none !important; backdrop-filter:none !important;
+  border:0 !important; box-shadow:none !important; border-radius:calc(var(--r) + 3px) !important; padding:3px !important;}
+.top .tabbar .tab{flex:1 1 0 !important; max-width:none !important; flex-direction:row !important; gap:8px !important;
+  padding:11px 6px !important; border-radius:var(--r) !important; color:rgba(255,255,255,.75) !important; font-size:14px !important; font-weight:500 !important;}
+.top .tabbar .tab svg{width:18px !important; height:18px !important;}
+.top .tabbar .tab.active{background:#F4F4F2 !important; color:var(--ink) !important; font-weight:600 !important;}
+.top .tabbar .tab.active::before{display:none !important;}
+.wrap{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 40px) !important;}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="top">
     <div class="logo">Bus<b>Ins</b></div>
-    <div class="tabs" id="tabs"><div class="tabThumb" id="tabThumb"></div><button class="tab active" data-v="linhas">Linhas</button><button class="tab" data-v="porto">Como chegar</button></div>
+    <nav class="tabbar" id="tabs">
+  <button class="tab active" data-v="linhas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="15" rx="3"/><path d="M4 11h16"/><path d="M7 18v2M17 18v2"/><circle cx="8" cy="14.5" r=".7" fill="currentColor"/><circle cx="16" cy="14.5" r=".7" fill="currentColor"/></svg><span>Linhas</span></button>
+  <button class="tab" data-v="porto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="2.5"/><circle cx="18" cy="5" r="2.5"/><path d="M8.5 19H16a3.5 3.5 0 0 0 0-7H8a3.5 3.5 0 0 1 0-7h7.5"/></svg><span>Como chegar</span></button>
+</nav>
   </div>
 
 
@@ -276,8 +390,10 @@ button{font:inherit; color:inherit; border:0; background:none; padding:0; cursor
   </div>
 </div>
 
+
 <div id="ov">
   <div id="sheet">
+    <div class="handle"></div>
     <div class="sTop"><div class="k" id="sK">Partida</div><button class="close" id="close">Fechar <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
     <div class="sBig num" id="sT"></div>
     <div class="sSub" id="sS"></div>
@@ -649,7 +765,7 @@ function openTrip(o){
 /* tabs */
 function setTab(v){
   document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active", t.dataset.v===v));
-  document.getElementById("tabThumb").style.transform = `translateX(${v==="porto"?100:0}%)`;
+  window.scrollTo(0,0);
   document.getElementById("viewLinhas").hidden = v!=="linhas";
   document.getElementById("viewPorto").hidden = v!=="porto";
   if(v==="porto"){ pstate.day=today(); renderPorto(); }
