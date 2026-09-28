@@ -346,6 +346,13 @@ html,body{height:auto !important;}
 .top .tabbar .tab.active{background:#F4F4F2 !important; color:var(--ink) !important; font-weight:600 !important;}
 .top .tabbar .tab.active::before{display:none !important;}
 .wrap{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 40px) !important;}
+/* ===== aliviar ===== */
+.secLinhas{padding:22px 22px 8px !important; justify-content:flex-start !important;}
+.secLinhas .m{margin-left:0 !important;}
+.nxRoute{margin-top:14px !important;}
+.nxLine{margin:0 !important;}
+.inv{background:transparent !important; color:var(--ink) !important; box-shadow:inset 0 0 0 1.5px var(--ink) !important;}
+.inv:active{background:var(--soft) !important;}
 </style>
 </head>
 <body>
@@ -360,7 +367,7 @@ html,body{height:auto !important;}
 
 
   <div class="view" id="viewLinhas">
-  <div class="sec" style="padding-top:30px"><div class="ttl">Linhas</div><div class="m">Toca para escolher</div></div>
+  <div class="sec secLinhas"><div class="m">Toca numa linha para a escolher</div></div>
   <div class="rule"></div>
   <div id="lines"></div>
 
@@ -433,7 +440,7 @@ function renderNext(){
   const inTxt = d<=0 ? "Agora" : "daqui a " + (h ? `${h}h${m?pad(m):""}` : `${m} min`);
   box.innerHTML = `
     <div class="nxTop"><span class="nxTime num">${trips[i][0]}</span><span class="nxIn">${inTxt}</span></div>
-    <div class="nxRoute"><span class="nxLine">Linha ${DATA[state.line].title}</span><b>${ra}</b> → <b>${rb}</b></div>`;
+    <div class="nxRoute"><span class="nxLine">Linha ${DATA[state.line].title}</span></div>`;
   box.onclick = ()=> openStops(dirData, trips[i]);
 }
 
@@ -779,4 +786,3 @@ setInterval(()=>{ tick(); renderNext(); renderTimes(); }, 30000);
 </script>
 </body>
 </html>
-
