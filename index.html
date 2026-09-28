@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-PT">
 <head>
 <meta charset="UTF-8">
@@ -195,15 +195,53 @@ button{font:inherit; color:inherit; border:0; background:none; padding:0; cursor
 .sjmWarn b{color:#6B3B00;}
 .opt.sjm .tt{color:var(--sub);}
 .pSegWrap{padding:18px 0 4px;}
+.top{padding:18px 22px 0 !important; gap:14px;}
+.top .tabs{margin:0; flex:0 1 250px; padding:4px;}
+.top .tabThumb{top:4px; bottom:4px; left:4px; width:calc((100% - 8px)/2);}
+.top .tab{padding:10px 6px; font-size:13.5px; white-space:nowrap;}
+.logo{font-size:24px !important;}
+/* medium weights */
+.route .v{font-weight:500 !important;}
+.nxTime{font-weight:500 !important;}
+/* ===== polish: menos vermelho, mais ar, linhas compactas ===== */
+:root{--rule:#D2D2CF;}
+.sec{padding:30px 22px 10px !important;}
+.sec .ttl{font-size:20px !important; letter-spacing:-.015em;}
+.sec .m{color:var(--sub) !important; font-weight:500 !important;}
+.note b{color:var(--ink) !important;}
+.bestK{color:var(--sub) !important;}
+.row:not(.on){padding:12px 22px !important; align-items:center !important;}
+.row:not(.on) .name{font-size:17px !important; line-height:1.25 !important;}
+.row:not(.on) .via{display:none !important;}
+.row:not(.on) .name br{display:none;}
+.row:not(.on) .n{align-self:center !important;}
+/* ===== grelha de horas ===== */
+.grid{border-top:0 !important; gap:8px; padding:0 16px; margin-top:14px !important;}
+.t{border:0 !important; border-radius:12px; padding:14px 0 !important; font-size:19px; background:rgba(255,255,255,.55);}
+.t:active{background:var(--soft) !important;}
+.t.past{background:transparent !important; color:#A8A8A5 !important;}
+.t.nx{background:var(--acc) !important; color:#fff !important; font-weight:600 !important;}
+.t.nx::after{display:none !important;}
+.pastBtn2{display:block; margin:14px 22px 0; font-size:13px; font-weight:600; color:var(--ink); border:1px solid var(--ink); border-radius:20px; padding:7px 14px;}
+.xf{color:var(--sub); white-space:nowrap;}
+#pNote details summary{cursor:pointer; list-style:none; font-weight:600; color:var(--ink);}
+#pNote details summary::-webkit-details-marker{display:none;}
+#pNote .ndet{margin-top:8px;}
+#pNote .ndet b:first-child{display:none;}
+#pSeg{padding:3px !important;}
+#pSeg .segThumb{top:3px !important; bottom:3px !important; left:3px !important; width:calc((100% - 6px)/3) !important;}
+#pSeg .segBtn{min-height:36px !important; padding:7px 4px !important; font-size:13px !important;}
+#pSeg .segBtn .td{font-size:8.5px !important;}
+.pSegWrap{padding:14px 0 0 !important;}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="top">
     <div class="logo">Bus<b>Ins</b></div>
+    <div class="tabs" id="tabs"><div class="tabThumb" id="tabThumb"></div><button class="tab active" data-v="linhas">Linhas</button><button class="tab" data-v="porto">Como chegar</button></div>
   </div>
 
-  <div class="tabs" id="tabs"><div class="tabThumb" id="tabThumb"></div><button class="tab active" data-v="linhas">Linhas</button><button class="tab" data-v="porto">Como chegar</button></div>
 
   <div class="view" id="viewLinhas">
   <div class="sec" style="padding-top:30px"><div class="ttl">Linhas</div><div class="m">Toca para escolher</div></div>
@@ -251,7 +289,7 @@ const DAYS = {du:"Dias úteis", sab:"Sábado", dom:"Domingo"};
 const SWAP = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v16"/><path d="M3 8l4-4 4 4"/><path d="M17 20V4"/><path d="M21 16l-4 4-4-4"/></svg>`;
 const order = Object.keys(DATA);
 const T0 = 6*60, T1 = 23*60; // timeline 06h–23h
-let state = {line:"1223", dir:"ida", day:today(), spin:false};
+let state = {line:"1223", dir:"ida", day:today(), spin:false, showPast:false};
 
 function today(){ const d=new Date().getDay(); return d===0?"dom":d===6?"sab":"du"; }
 function nowMin(){ const n=new Date(); return n.getHours()*60+n.getMinutes(); }
@@ -295,7 +333,7 @@ function renderLines(){
       <span class="name">${l.name.replace(" - "," ↔ ")}${l.tagline?`<br><span class="via">${l.tagline}</span>`:""}</span></button>`;
   }).join("");
   box.querySelectorAll("button.row").forEach(b=> b.onclick = ()=>{
-    state.line=b.dataset.k; state.dir="ida"; state.spin=false; renderAll();
+    state.line=b.dataset.k; state.dir="ida"; state.spin=false; state.showPast=false; renderAll();
 
   });
   document.getElementById("swap").onclick = ()=>{
@@ -315,7 +353,7 @@ function renderSeg(){
     const b = document.createElement("button");
     b.className = "segBtn" + (d===state.day?" active":"");
     b.innerHTML = DAYS[d] + (d===today() ? '<span class="td">hoje</span>' : "");
-    b.onclick = ()=>{ state.day=d; renderTimes(); };
+    b.onclick = ()=>{ state.day=d; state.showPast=false; renderTimes(); };
     seg.appendChild(b);
   });
   document.getElementById("thumb").style.transform = `translateX(${keys.indexOf(state.day)*100}%)`;
@@ -331,10 +369,16 @@ function renderTimes(){
   if(!trips.length){ box.innerHTML = `<div class="empty">Sem serviço neste dia.</div>`; return; }
   const now = nowMin(), isToday = state.day===today();
   const nx = isToday ? trips.findIndex(t=>toMin(t[0])>=now) : -1;
-  box.innerHTML = `<div class="grid">` + trips.map((t,i)=>{
+  const pastN = isToday ? (nx===-1 ? trips.length : nx) : 0;
+  const canHide = false;
+  const showPast = !canHide || state.showPast;
+  box.innerHTML = (canHide ? `<button class="pastBtn2" id="pastBtn2">${state.showPast?"Esconder":"Ver"} ${pastN} ${pastN===1?"anterior":"anteriores"}</button>` : "")
+    + `<div class="grid">` + trips.map((t,i)=>{
     const past = isToday && (nx===-1 || i<nx);
+    if(past && !showPast) return "";
     return `<button class="t num ${past?"past":""} ${i===nx?"nx":""}" data-i="${i}">${t[0]}</button>`;
   }).join("") + `</div><div class="hint">Toca numa hora para ver as paragens</div>`;
+  const pb2=document.getElementById("pastBtn2"); if(pb2) pb2.onclick=()=>{ state.showPast=!state.showPast; renderTimes(); };
   box.querySelectorAll("[data-i]").forEach(b=> b.onclick = ()=> openStops(dirData, trips[+b.dataset.i]));
 }
 
@@ -481,17 +525,24 @@ function sjmHTML(list, top, isSel){
     <div class="sjmWarn">${warn}</div>
     ${list.map((o,i)=>`<button class="opt sjm" data-s="${i}">
       <div class="mid"><div class="tt num">${fromMin(o.dep)}<span>→</span>${fromMin(o.arr)}</div>
-      <div class="legs"><span class="chip">${o.legs[0].line}</span> ${ida?"desde":"até"} S. João da Madeira <span class="tight">${ida?"Sem ligação desde Vale de Cambra":"Sem ligação para Vale de Cambra"}</span></div></div>
-      <div class="du">${durTxt(o.arr-o.dep)}<br><span style="color:var(--ink)">${ida?"":"de "}${destName(o).replace("Porto (","").replace(")","")}</span></div></button>`).join("")}`;
+      <div class="legs"><span class="chip">${o.legs[0].line}</span> ${ida?"desde":"até"} S. João da Madeira</div></div>
+      <div class="du">${durTxt(o.arr-o.dep)}<br><span style="color:var(--ink)">${ida?"→ ":"de "}${destName(o).replace("Porto (","").replace(")","")}</span></div></button>`).join("")}`;
 }
 
+function shortPlace(o, prep){
+  const n=destName(o);
+  if(/Campanh/.test(n)) return prep==="de" ? "de Campanhã" : "Campanhã";
+  if(/Camélias/.test(n)) return prep==="de" ? "das Camélias" : "Camélias";
+  return (prep==="de"?"de ":"")+n;
+}
 function destName(o){ const L = pstate.dir==="ida" ? o.legs[o.legs.length-1] : o.legs[0]; const n = pstate.dir==="ida" ? L.stops[L.stops.length-1] : L.stops[0];
   return /Campanh/.test(n) ? "Porto (Campanhã)" : /Camélias/.test(n) ? "Porto (Camélias)" : n.replace(" (CCT)",""); }
 
 function legsHTML(o){
   if(o.wk) return `<span class="chip">${o.legs[0].line}</span> Direto ${pstate.dir==="ida"?"desde":"até"} S. João da Madeira`;
   if(!o.xfer) return `<span class="chip">${o.legs[0].line}</span> Direto`;
-  return `<span class="chip">${o.legs[0].line}</span> → <span class="chip">${o.legs[1].line}</span> troca em ${o.xfer.short}${o.xfer.wait<TIGHT?` <span class="tight">Troca apertada · ${o.xfer.wait} min</span>`:""}`;
+  const w = o.xfer.wait;
+  return `<span class="chip">${o.legs[0].line}</span> → <span class="chip">${o.legs[1].line}</span> ${w<TIGHT?`<span class="tight">Troca apertada · ${w} min</span>`:`<span class="xf">troca em S. João · ${w} min</span>`}`;
 }
 
 function nextDayWithService(){
@@ -553,7 +604,7 @@ function renderPorto(){
     <button class="best" id="bestBtn">
       <div class="bestK">${isToday ? "A melhor opção" : "Primeira do dia"}</div>
       <div class="nxTop"><span class="nxTime num">${fromMin(o0.dep)}</span>${isToday?`<span class="nxIn">${inTxt}</span>`:""}</div>
-      <div class="bestArr">${pstate.dir==="ida" ? `Chegas a ${destName(o0)} às <b class="num">${fromMin(o0.arr)}</b>` : `Sai de ${destName(o0)} · chegas${o0.wk?" a S. João da Madeira":""} às <b class="num">${fromMin(o0.arr)}</b>`} · ${durTxt(o0.arr-o0.dep)}</div>
+      <div class="bestArr">${pstate.dir==="ida" ? `Chegas às <b class="num">${fromMin(o0.arr)}</b> · ${shortPlace(o0,"a")}` : `Sai ${shortPlace(o0,"de")} · chegas às <b class="num">${fromMin(o0.arr)}</b>`} · ${durTxt(o0.arr-o0.dep)}</div>
       <div class="legs">${legsHTML(o0)}</div>
     </button>`;
   document.getElementById("bestBtn").onclick = ()=> openTrip(o0);
@@ -561,17 +612,17 @@ function renderPorto(){
   document.getElementById("pCount").textContent = rest.length ? `${rest.length} ${isToday?"hoje":dayLbl}` : "";
   list.innerHTML = rest.length ? rest.map((o,i)=>`<button class="opt" data-i="${i+1}">
       <div class="mid"><div class="tt num">${fromMin(o.dep)}<span>→</span>${fromMin(o.arr)}</div><div class="legs">${legsHTML(o)}</div></div>
-      <div class="du">${durTxt(o.arr-o.dep)}<br><span style="color:var(--ink)">${pstate.dir==="ida"?"":"de "}${destName(o).replace("Porto (","").replace(")","")}</span></div></button>`).join("")
+      <div class="du">${durTxt(o.arr-o.dep)}<br><span style="color:var(--ink)">${pstate.dir==="ida"?"→ ":"de "}${destName(o).replace("Porto (","").replace(")","")}</span></div></button>`).join("")
     : `<div class="pNone"><div class="b">Não há mais opções ${isToday?"hoje":dayLbl}.</div></div>`;
   list.querySelectorAll(".opt").forEach(x=> x.onclick=()=> openTrip(opts[+x.dataset.i]));
   setPNote(dt);
 }
 function setPNote(dt){
-  document.getElementById("pNote").innerHTML = dt!=="du"
+  document.getElementById("pNote").innerHTML = "<details><summary>ⓘ Como funciona</summary><div class=\"ndet\">" + (dt!=="du"
     ? `<b>Nota</b> — Ao fim de semana só aparecem os autocarros entre <b style="color:var(--ink)">S. João da Madeira (CCT)</b> e o Porto: 1410 (Campanhã) e 2026 (Camélias).`
     : pstate.dir==="volta"
     ? `<b>Nota</b> — Direto pela linha 1223 (Camélias), com troca em <b style="color:var(--ink)">S. João da Madeira (CCT)</b> (1410 desde Campanhã ou 2026 desde as Camélias, depois o 1215). As trocas têm pelo menos ${MIN_XFER} min de margem; abaixo de ${TIGHT} min aparece um aviso, porque um atraso por trânsito pode fazer perder a ligação.`
-    : `<b>Nota</b> — Direto pela linha 1223 ou com troca em <b style="color:var(--ink)">S. João da Madeira (CCT)</b>: o 1215 termina no terminal e o 1410 (Campanhã) ou o 2026 (Camélias) partem do mesmo terminal. As trocas têm pelo menos ${MIN_XFER} min de margem; abaixo de ${TIGHT} min aparece um aviso, porque um atraso por trânsito pode fazer perder a ligação. Alguns horários do 1215 em dias úteis são só em período escolar.`;
+    : `<b>Nota</b> — Direto pela linha 1223 ou com troca em <b style="color:var(--ink)">S. João da Madeira (CCT)</b>: o 1215 termina no terminal e o 1410 (Campanhã) ou o 2026 (Camélias) partem do mesmo terminal. As trocas têm pelo menos ${MIN_XFER} min de margem; abaixo de ${TIGHT} min aparece um aviso, porque um atraso por trânsito pode fazer perder a ligação. Alguns horários do 1215 em dias úteis são só em período escolar.`) + "</div></details>";
 }
 
 function openTrip(o){
