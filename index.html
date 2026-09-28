@@ -195,8 +195,10 @@ button{font:inherit; color:inherit; border:0; background:none; padding:0; cursor
 .sjmWarn b{color:#6B3B00;}
 .opt.sjm .tt{color:var(--sub);}
 .pSegWrap{padding:18px 0 4px;}
-.top{padding:18px 22px 0 !important; gap:14px;}
-.top .tabs{margin:0; flex:0 1 250px; padding:4px;}
+.top{padding:22px 22px 6px !important; flex-direction:column; align-items:stretch !important; gap:16px;}
+.top .logo{align-self:flex-start;}
+.top .tabs{align-self:flex-end; width:250px;}
+.top .tabs{margin:0; padding:4px;}
 .top .tabThumb{top:4px; bottom:4px; left:4px; width:calc((100% - 8px)/2);}
 .top .tab{padding:10px 6px; font-size:13.5px; white-space:nowrap;}
 .logo{font-size:24px !important;}
@@ -661,3 +663,4 @@ setInterval(()=>{ tick(); renderNext(); renderTimes(); }, 30000);
 </script>
 </body>
 </html>
+
