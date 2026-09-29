@@ -710,7 +710,7 @@ function legsHTML(o){
   if(o.wk) return `<span class="chip">${o.legs[0].line}</span> Direto ${pstate.dir==="ida"?"desde":"até"} S. João da Madeira`;
   if(!o.xfer) return `<span class="chip">${o.legs[0].line}</span> Direto`;
   const w = o.xfer.wait;
-  return `<span class="chip">${o.legs[0].line}</span> → <span class="chip">${o.legs[1].line}</span> ${w<TIGHT?`<span class="tight">Troca apertada · ${w} min</span>`:`<span class="xf">troca em S. João · ${w} min</span>`}${w<TIGHT&&o.xfer.alt?`<div class="altLine">Se perderes: ${o.xfer.alt.line} às ${fromMin(o.xfer.alt.dep)} · chegas às ${fromMin(o.xfer.alt.arr)}</div>`:""}`;
+  return `<span class="chip">${o.legs[0].line}</span> → <span class="chip">${o.legs[1].line}</span> ${w<TIGHT?`<span class="tight">Troca apertada · ${w} min</span>`:`<span class="xf">troca em S. João · ${w} min</span>`}${w<TIGHT&&o.xfer.alt?`<div class="altLine">Se perderes a ligação, há o ${o.xfer.alt.line} das ${fromMin(o.xfer.alt.dep)} e chegas às ${fromMin(o.xfer.alt.arr)}.</div>`:""}`;
 }
 
 function nextDayWithService(){
@@ -802,7 +802,7 @@ function openTrip(o){
     if(li===1){
       html += o.xfer.kind==="oaz"
         ? `<div class="xfer">Troca em <b>Praça José da Costa (OAZ)</b> — a mesma paragem onde sais.<br>Espera cerca de <b>${durTxt(o.xfer.wait)}</b>. O ${o.xfer.line} sai da EBS Soares de Basto às ${o.xfer.ebs} e passa na praça por volta das ${fromMin(o.xfer.pass)}.</div>`
-        : `<div class="xfer">Troca em <b>${o.xfer.at}</b> — o ${o.xfer.line} parte do mesmo terminal onde sais.<br>Espera <b>${durTxt(o.xfer.wait)}</b>.${o.xfer.wait<TIGHT?`<div class="tightBox"><b>Atenção:</b> a margem é pequena. Se o primeiro autocarro se atrasar por causa do trânsito, podes perder a ligação.${o.xfer.alt?` <b>Se perderes, há o ${o.xfer.alt.line} das ${fromMin(o.xfer.alt.dep)}</b> — chegas às ${fromMin(o.xfer.alt.arr)} (+${o.xfer.alt.arr-o.arr} min).`:""}</div>`:""}</div>`;
+        : `<div class="xfer">Troca em <b>${o.xfer.at}</b> — o ${o.xfer.line} parte do mesmo terminal onde sais.<br>Espera <b>${durTxt(o.xfer.wait)}</b>.${o.xfer.wait<TIGHT?`<div class="tightBox"><b>Atenção:</b> a margem é pequena. Se o primeiro autocarro se atrasar por causa do trânsito, podes perder a ligação.${o.xfer.alt?` <b>Se perderes a ligação, há o ${o.xfer.alt.line} das ${fromMin(o.xfer.alt.dep)}</b> e chegas às ${fromMin(o.xfer.alt.arr)} (mais ${o.xfer.alt.arr-o.arr} min).`:""}</div>`:""}</div>`;
     }
     html += `<div class="legHead"><span class="chip">${L.line}</span>${L.stops[0].replace(" (CCT)","")} → ${L.stops.slice(-1)[0].replace(" (CCT)","")}</div>`;
     html += L.stops.map((n,i)=>`<div class="stop ${i===0||i===L.stops.length-1?"end":""}"><span class="n">${pad(i+1)}</span><span class="nm">${n}</span><span class="tm num">${L.est0&&i===0?'<span class="est">≈ </span>':''}${L.t[i]}</span></div>`).join("");
@@ -829,3 +829,4 @@ setInterval(()=>{ tick(); renderNext(); renderTimes(); }, 30000);
 </script>
 </body>
 </html>
+
