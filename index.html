@@ -360,6 +360,7 @@ html,body{height:auto !important;}
 .inv:active{background:#D2D2CF !important;}
 .holBanner{margin:16px 22px 0; padding:12px 14px; background:#FCEBC9; color:#6B3B00; font-size:13.5px; line-height:1.45; border-radius:var(--r);}
 .holBanner b{color:#6B3B00;}
+.altLine{flex-basis:100%; margin-top:4px; font-size:12.5px; color:#6B3B00;}
 </style>
 </head>
 <body>
@@ -606,9 +607,17 @@ function portoOptions(dayType){
           }
         });
       });
+      let alt=null;
+      if(best) ["1410","2026"].forEach(k=>{
+        (DATA[k].dirs.ida.trips[dayType]||[]).forEach(t2=>{
+          const dep2=toMin(t2[0]); if(dep2<=best.dep2) return;
+          const arr=toMin(t2[t2.length-1]);
+          if(!alt || arr<alt.arr || (arr===alt.arr && dep2<alt.dep)) alt={line:k, dep:dep2, arr, to:/Campanh/.test(t2.length&&DATA[k].dirs.ida.stops.slice(-1)[0])?"Campanhã":"Camélias"};
+        });
+      });
       if(best) opts.push({dep:toMin(t1[0]), arr:best.arr,
         legs:[{line:"1215", stops:a.stops, t:t1}, {line:best.k, stops:best.d.stops, t:best.t2}],
-        xfer:{kind:"sjm", at:"S. João da Madeira (CCT)", short:"S. João da Madeira", wait:best.dep2-arrSJM, line:best.k}});
+        xfer:{kind:"sjm", at:"S. João da Madeira (CCT)", short:"S. João da Madeira", wait:best.dep2-arrSJM, line:best.k, alt}});
     });
   } else {
     // Porto (1410 Campanhã / 2026 Camélias) → S. João da Madeira + 1215 → Vale de Cambra
@@ -622,9 +631,15 @@ function portoOptions(dayType){
           const dep2=toMin(t2[0]);
           if(dep2 >= arrSJM + MIN_XFER){ const arr=toMin(t2[t2.length-1]); if(!best || arr<best.arr) best={t2,dep2,arr}; }
         });
+        let alt=null;
+        if(best) (c.trips[dayType]||[]).forEach(t2=>{
+          const dep2=toMin(t2[0]); if(dep2<=best.dep2) return;
+          const arr=toMin(t2[t2.length-1]);
+          if(!alt || arr<alt.arr) alt={line:"1215", dep:dep2, arr, to:"Vale de Cambra"};
+        });
         if(best) opts.push({dep:toMin(t1[0]), arr:best.arr,
           legs:[{line:k, stops:d.stops, t:t1}, {line:"1215", stops:c.stops, t:best.t2}],
-          xfer:{kind:"sjm", at:"S. João da Madeira (CCT)", short:"S. João da Madeira", wait:best.dep2-arrSJM, line:"1215"}});
+          xfer:{kind:"sjm", at:"S. João da Madeira (CCT)", short:"S. João da Madeira", wait:best.dep2-arrSJM, line:"1215", alt}});
       });
     });
   }
@@ -695,7 +710,7 @@ function legsHTML(o){
   if(o.wk) return `<span class="chip">${o.legs[0].line}</span> Direto ${pstate.dir==="ida"?"desde":"até"} S. João da Madeira`;
   if(!o.xfer) return `<span class="chip">${o.legs[0].line}</span> Direto`;
   const w = o.xfer.wait;
-  return `<span class="chip">${o.legs[0].line}</span> → <span class="chip">${o.legs[1].line}</span> ${w<TIGHT?`<span class="tight">Troca apertada · ${w} min</span>`:`<span class="xf">troca em S. João · ${w} min</span>`}`;
+  return `<span class="chip">${o.legs[0].line}</span> → <span class="chip">${o.legs[1].line}</span> ${w<TIGHT?`<span class="tight">Troca apertada · ${w} min</span>`:`<span class="xf">troca em S. João · ${w} min</span>`}${w<TIGHT&&o.xfer.alt?`<div class="altLine">Se perderes: ${o.xfer.alt.line} às ${fromMin(o.xfer.alt.dep)} · chegas às ${fromMin(o.xfer.alt.arr)}</div>`:""}`;
 }
 
 function nextDayWithService(){
@@ -787,7 +802,7 @@ function openTrip(o){
     if(li===1){
       html += o.xfer.kind==="oaz"
         ? `<div class="xfer">Troca em <b>Praça José da Costa (OAZ)</b> — a mesma paragem onde sais.<br>Espera cerca de <b>${durTxt(o.xfer.wait)}</b>. O ${o.xfer.line} sai da EBS Soares de Basto às ${o.xfer.ebs} e passa na praça por volta das ${fromMin(o.xfer.pass)}.</div>`
-        : `<div class="xfer">Troca em <b>${o.xfer.at}</b> — o ${o.xfer.line} parte do mesmo terminal onde sais.<br>Espera <b>${durTxt(o.xfer.wait)}</b>.${o.xfer.wait<TIGHT?`<div class="tightBox"><b>Atenção:</b> a margem é pequena. Se o primeiro autocarro se atrasar por causa do trânsito, podes perder a ligação. Considera apanhar uma opção mais cedo.</div>`:""}</div>`;
+        : `<div class="xfer">Troca em <b>${o.xfer.at}</b> — o ${o.xfer.line} parte do mesmo terminal onde sais.<br>Espera <b>${durTxt(o.xfer.wait)}</b>.${o.xfer.wait<TIGHT?`<div class="tightBox"><b>Atenção:</b> a margem é pequena. Se o primeiro autocarro se atrasar por causa do trânsito, podes perder a ligação.${o.xfer.alt?` <b>Se perderes, há o ${o.xfer.alt.line} das ${fromMin(o.xfer.alt.dep)}</b> — chegas às ${fromMin(o.xfer.alt.arr)} (+${o.xfer.alt.arr-o.arr} min).`:""}</div>`:""}</div>`;
     }
     html += `<div class="legHead"><span class="chip">${L.line}</span>${L.stops[0].replace(" (CCT)","")} → ${L.stops.slice(-1)[0].replace(" (CCT)","")}</div>`;
     html += L.stops.map((n,i)=>`<div class="stop ${i===0||i===L.stops.length-1?"end":""}"><span class="n">${pad(i+1)}</span><span class="nm">${n}</span><span class="tm num">${L.est0&&i===0?'<span class="est">≈ </span>':''}${L.t[i]}</span></div>`).join("");
