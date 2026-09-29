@@ -353,6 +353,13 @@ html,body{height:auto !important;}
 .nxLine{margin:0 !important;}
 .inv{background:transparent !important; color:var(--ink) !important; box-shadow:inset 0 0 0 1.5px var(--ink) !important;}
 .inv:active{background:var(--soft) !important;}
+/* ===== inverter redondo ===== */
+.inv{width:46px !important; height:46px !important; padding:0 !important; border-radius:50% !important; justify-content:center !important; gap:0 !important;
+  background:#E0E0DD !important; color:var(--ink) !important; box-shadow:none !important; flex:0 0 auto !important; align-self:center !important; font-size:0 !important;}
+.inv svg{width:20px !important; height:20px !important;}
+.inv:active{background:#D2D2CF !important;}
+.holBanner{margin:16px 22px 0; padding:12px 14px; background:#FCEBC9; color:#6B3B00; font-size:13.5px; line-height:1.45; border-radius:var(--r);}
+.holBanner b{color:#6B3B00;}
 </style>
 </head>
 <body>
@@ -416,7 +423,21 @@ const order = Object.keys(DATA);
 const T0 = 6*60, T1 = 23*60; // timeline 06h–23h
 let state = {line:"1223", dir:"ida", day:today(), spin:false, showPast:false};
 
-function today(){ const d=new Date().getDay(); return d===0?"dom":d===6?"sab":"du"; }
+/* ===== Feriados nacionais (Portugal) ===== */
+function easter(y){ const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),mo=Math.floor((h+l-7*m+114)/31),da=((h+l-7*m+114)%31)+1; return new Date(y,mo-1,da); }
+function holidayName(date){
+  const _hcache = (window._hcache = window._hcache || {});
+  const y=date.getFullYear();
+  if(!_hcache[y]){
+    const E=easter(y), add=(n)=>{ const d=new Date(E); d.setDate(E.getDate()+n); return d; };
+    const list=[[new Date(y,0,1),"Ano Novo"],[add(-2),"Sexta-feira Santa"],[E,"Páscoa"],[new Date(y,3,25),"25 de Abril"],[new Date(y,4,1),"Dia do Trabalhador"],[add(60),"Corpo de Deus"],[new Date(y,5,10),"Dia de Portugal"],[new Date(y,7,15),"Assunção de Nossa Senhora"],[new Date(y,9,5),"Implantação da República"],[new Date(y,10,1),"Todos os Santos"],[new Date(y,11,1),"Restauração da Independência"],[new Date(y,11,8),"Imaculada Conceição"],[new Date(y,11,25),"Natal"]];
+    _hcache[y]={}; list.forEach(([d,n])=>{ _hcache[y][d.getMonth()+"-"+d.getDate()]=n; });
+  }
+  return _hcache[y][date.getMonth()+"-"+date.getDate()] || null;
+}
+function isHolidayToday(){ return !!holidayName(new Date()); }
+function dayLabelToday(){ const h=holidayName(new Date()); return h ? "Feriado" : DAYS[today()]; }
+function today(){ const n=new Date(); if(holidayName(n)) return "dom"; const d=n.getDay(); return d===0?"dom":d===6?"sab":"du"; }
 function nowMin(){ const n=new Date(); return n.getHours()*60+n.getMinutes(); }
 function toMin(t){ const [h,m]=t.split(":").map(Number); return h*60+m; }
 function pad(n){ return String(n).padStart(2,"0"); }
@@ -430,7 +451,7 @@ function renderNext(){
   const now = nowMin();
   const i = trips.findIndex(t=>toMin(t[0])>=now);
   const [ra,rb] = ends(dirData);
-  document.getElementById("nxDay").textContent = "Hoje · " + DAYS[today()];
+  document.getElementById("nxDay").textContent = "Hoje · " + dayLabelToday();
   const box = document.getElementById("nx");
   if(i===-1){
     box.innerHTML = `<div class="nxNone">${trips.length ? "Não há mais partidas hoje" : "Esta linha não circula hoje"}<small>Consulta os horários abaixo.</small></div>`;
@@ -452,7 +473,7 @@ function renderLines(){
       const [a,b] = ends(l.dirs[state.dir]);
       return `<div class="row on"><span class="n">${n}</span>
         <div class="route" id="route"><div class="k">De</div><div class="v">${a}</div><div class="gap"></div><div class="k">Para</div><div class="v">${b}</div></div>
-        <button class="inv ${state.spin?"spin":""}" id="swap">Inverter ${SWAP}</button></div>`;
+        <button class="inv ${state.spin?"spin":""}" id="swap" aria-label="Inverter sentido">${SWAP}</button></div>`;
     }
     return `<button class="row" data-k="${k}"><span class="n">${n}</span>
       <span class="name">${l.name.replace(" - "," ↔ ")}${l.tagline?`<br><span class="via">${l.tagline}</span>`:""}</span></button>`;
@@ -507,7 +528,14 @@ function renderTimes(){
   box.querySelectorAll("[data-i]").forEach(b=> b.onclick = ()=> openStops(dirData, trips[+b.dataset.i]));
 }
 
-function renderAll(){ renderNext(); renderLines(); renderTimes(); }
+function holidayBanner(){
+  const h=holidayName(new Date());
+  let el=document.getElementById("holBanner");
+  if(!h){ if(el) el.remove(); return; }
+  if(!el){ el=document.createElement("div"); el.id="holBanner"; el.className="holBanner"; document.querySelector(".top").after(el); }
+  el.innerHTML=`<b>Hoje é feriado</b> · ${h}. Os horários mostrados são os de domingo e feriados.`;
+}
+function renderAll(){ holidayBanner(); renderNext(); renderLines(); renderTimes(); }
 
 function closeSheet(){ document.getElementById("ov").classList.remove("show"); }
 function openStops(dirData, trip){
@@ -549,7 +577,7 @@ let pstate = { dir:"ida", per:"esc", spin:false, day:today() };
 function fromMin(m){ return pad(Math.floor(m/60))+":"+pad(m%60); }
 function durTxt(m){ const h=Math.floor(m/60), r=m%60; return h ? `${h}h${r?pad(r):""}` : `${r} min`; }
 
-function dayKey(date){ const d=date.getDay(); return d===0?"dom":d===6?"sab":"du"; }
+function dayKey(date){ if(holidayName(date)) return "dom"; const d=date.getDay(); return d===0?"dom":d===6?"sab":"du"; }
 function portoOptions(dayType){
   const opts=[];
   if(dayType!=="du"){
@@ -691,13 +719,13 @@ function renderPSeg(){
 
 function renderPorto(){
   const dt=pstate.day, isSel = dt===today(), now = isSel ? nowMin() : -1;
-  document.getElementById("pDay").textContent = (isSel?"Hoje · ":"") + DAYS[dt];
+  document.getElementById("pDay").textContent = isSel ? "Hoje · " + dayLabelToday() : DAYS[dt];
   document.getElementById("pTtl").textContent = isSel ? "Mais rápido agora" : "Mais rápido";
   const home = dt==="du" ? "Vale de Cambra" : "S. João da Madeira";
   const [a,b] = pstate.dir==="ida" ? [home,"Porto"] : ["Porto",home];
   document.getElementById("pDirBox").innerHTML = `<div class="pDir row on" style="border-bottom:1px solid var(--rule)">
     <div class="route" id="pRoute"><div class="k">De</div><div class="v">${a}</div><div class="gap"></div><div class="k">Para</div><div class="v">${b}</div></div>
-    <button class="inv ${pstate.spin?"spin":""}" id="pSwap">Inverter ${SWAP}</button></div>`;
+    <button class="inv ${pstate.spin?"spin":""}" id="pSwap" aria-label="Inverter sentido">${SWAP}</button></div>`;
   document.getElementById("pSwap").onclick = ()=>{
     pstate.dir = pstate.dir==="ida"?"volta":"ida"; pstate.spin=!pstate.spin;
     if(navigator.vibrate) navigator.vibrate(8);
