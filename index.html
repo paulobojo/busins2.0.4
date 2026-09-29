@@ -392,6 +392,17 @@ html,body{height:auto !important;}
 .nxRoute{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
 .nxRoute .nxLine{display:inline-block !important;}
 .nxRoute .from{font-size:16px;}
+.chain{flex-basis:100%; color:var(--ink); line-height:1.9;}
+.chain .chip{vertical-align:1px;}
+.inLine{font-size:15px !important;}
+.best .legs{margin-top:12px !important;}
+.opt .tt .ttFrom{font-size:15px !important; color:var(--sub) !important; margin:0 0 0 6px !important; letter-spacing:0; font-weight:500;}
+.sjmDet summary{list-style:none; cursor:pointer;}
+.sjmDet summary::-webkit-details-marker{display:none;}
+.sjmDet .ver{color:var(--ink); font-weight:600; text-decoration:underline; text-underline-offset:3px;}
+.sjmDet[open] .ver{display:none;}
+.xf .tight{margin-left:4px;}
+.opt .tt{font-weight:600 !important;}
 </style>
 </head>
 <body>
@@ -493,8 +504,8 @@ function renderNext(){
   const inTxt = d<=0 ? "Agora" : "daqui a " + (h ? `${h}h${m?pad(m):""}` : `${m} min`);
   box.innerHTML = `
     <div class="nxTop"><span class="nxTime num">${trips[i][0]}</span></div>
-    <div class="inLine">${cap(inTxt)}</div>
-    <div class="nxRoute"><span class="nxLine">Linha ${DATA[state.line].title}</span> <span class="from">Sai ${fromTxt(dirData.stops[0])}</span></div>`;
+    <div class="bestArr">Sai ${fromTxt(dirData.stops[0])} · <span class="inRed">${inTxt}</span></div>
+    <div class="nxRoute"><span class="nxLine">Linha ${DATA[state.line].title}</span></div>`;
   box.onclick = ()=> openStops(dirData, trips[i]);
 }
 
@@ -675,9 +686,11 @@ function portoOptions(dayType){
       });
     });
   }
-  const keep = opts.filter(o=> !opts.some(q=> q!==o && q.dep>=o.dep && q.arr<=o.arr && (q.dep>o.dep || q.arr<o.arr)));
-  // se duas opções forem iguais (mesma partida e chegada), fica a direta
-  const uniq = keep.filter((o,i)=> !keep.some((q,j)=> j<i && q.dep===o.dep && q.arr===o.arr));
+  // só compara opções que partem do mesmo sítio (Campanhã e Camélias são sítios diferentes)
+  const org = o => o.legs[0].stops[0];
+  const keep = opts.filter(o=> !opts.some(q=> q!==o && org(q)===org(o) && q.dep>=o.dep && q.arr<=o.arr && (q.dep>o.dep || q.arr<o.arr)));
+  // se duas opções do mesmo sítio forem iguais (mesma partida e chegada), fica a direta
+  const uniq = keep.filter((o,i)=> !keep.some((q,j)=> j<i && org(q)===org(o) && q.dep===o.dep && q.arr===o.arr));
   return uniq.sort((a,b)=>a.dep-b.dep);
 }
 /* Depois da última ligação possível para Vale de Cambra: autocarros do Porto que só chegam a S. João da Madeira */
@@ -720,13 +733,13 @@ function sjmHTML(list, top, isSel){
   const warn = ida
     ? `<b>Atenção:</b> ${top?hj+" já não há ligação desde Vale de Cambra.":(wk?"ao fim de semana há poucos autocarros de Vale de Cambra para S. João da Madeira, por isso nem todos estes têm ligação.":"depois das opções acima já não há ligação desde Vale de Cambra.")} Estes autocarros partem de <b>S. João da Madeira (CCT)</b> — tens de chegar lá por outra forma (boleia, táxi…).`
     : `<b>Atenção:</b> ${top?hj+" já não há ligação para Vale de Cambra.":"depois das opções acima já não há ligação para Vale de Cambra."} Estes autocarros só te levam até <b>S. João da Madeira (CCT)</b> — a partir daí vais precisar de outra forma de chegar a casa (boleia, táxi…).`;
-  return `<div class="sec"><div class="ttl">${title}</div><div class="m">${list.length} ${hj}</div></div>
+  return `<div class="sjmDet"><div class="sec"><div class="ttl">${title}</div><div class="m">${list.length} ${hj}</div></div>
     <div class="rule"></div>
     <div class="sjmWarn">${warn}</div>
     ${list.map((o,i)=>`<button class="opt sjm" data-s="${i}">
-      <div class="mid"><div class="tt num">${fromMin(o.dep)}<span>→</span>${fromMin(o.arr)}</div>
+      <div class="mid"><div class="tt num">${fromMin(o.dep)} <span class="ttFrom">${fromTxt(o.legs[0].stops[0])}</span></div>
       <div class="legs">${legsHTML(o)}</div></div>
-      </button>`).join("")}`;
+      </button>`).join("")}</div>`;
 }
 
 function placeName(n){
@@ -767,10 +780,10 @@ function legsHTML(o, withTimes=true){
   const porto = n => /Campanh|Camélias/.test(n);
   if(!o.xfer){
     const showTo = porto(dest) || o.wk || o.sjmOnly;
-    return `<span class="chip">${A.line}</span> <span class="from">${fromTxt(orig)}${showTo?" "+toTxt(dest):""}</span>`;
+    return `<span class="chip">${A.line}</span> <span class="from">${showTo?toTxt(dest):"Direto"}</span>`;
   }
   const w = o.xfer.wait;
-  return `<span class="chip">${A.line}</span> <span class="from">${fromTxt(orig)}</span> → <span class="chip">${B.line}</span>${porto(dest)?` <span class="from">${toTxt(dest)}</span>`:""} <span class="xf">troca em S. João da Madeira, sai às <b class="num">${B.t[0]}</b></span>${w<TIGHT?`<span class="tight">Troca apertada · ${w} min para a troca</span>`:`<span class="xfw">(${w} min para a troca)</span>`}${w<TIGHT&&o.xfer.alt?`<div class="altLine">Se perderes a ligação, há o ${o.xfer.alt.line} das ${fromMin(o.xfer.alt.dep)} e chegas às ${fromMin(o.xfer.alt.arr)}.</div>`:""}`;
+  return `<span class="chain"><span class="chip">${A.line}</span> → S. João da Madeira → <span class="chip">${B.line}</span> ${toTxt(dest)}</span><span class="xf">O ${B.line} sai às <b class="num">${B.t[0]}</b> · ${w<TIGHT?`<span class="tight">Troca apertada · ${w} min</span>`:`${w} min para a troca`}</span>${w<TIGHT&&o.xfer.alt?`<div class="altLine">Se perderes a ligação, há o ${o.xfer.alt.line} das ${fromMin(o.xfer.alt.dep)} e chegas às ${fromMin(o.xfer.alt.arr)}.</div>`:""}`;
 }
 
 function nextDayWithService(){
@@ -832,14 +845,14 @@ function renderPorto(){
     <button class="best" id="bestBtn">
       <div class="bestK">${isToday ? "A melhor opção" : "Primeira do dia"}</div>
       <div class="nxTop"><span class="nxTime num">${fromMin(o0.dep)}</span></div>
-      ${isToday?`<div class="inLine">${cap(inTxt)}</div>`:""}<div class="bestArr">${pstate.dir==="ida" ? `Chegas às <b class="num">${fromMin(o0.arr)}</b> · ${shortPlace(o0,"a")}` : `Sai ${shortPlace(o0,"de")} · chegas às <b class="num">${fromMin(o0.arr)}</b>`}</div>
+      <div class="bestArr">Sai ${fromTxt(o0.legs[0].stops[0])}${isToday?` · <span class="inRed">${inTxt}</span>`:""}</div>
       <div class="legs">${legsHTML(o0)}</div>
     </button>`;
   document.getElementById("bestBtn").onclick = ()=> openTrip(o0);
   const rest = opts.slice(1);
   document.getElementById("pCount").textContent = rest.length ? `${rest.length} ${isToday?"hoje":dayLbl}` : "";
   list.innerHTML = rest.length ? rest.map((o,i)=>`<button class="opt" data-i="${i+1}">
-      <div class="mid"><div class="tt num">${fromMin(o.dep)}<span>→</span>${fromMin(o.arr)}</div><div class="legs">${legsHTML(o)}</div></div>
+      <div class="mid"><div class="tt num">${fromMin(o.dep)} <span class="ttFrom">${fromTxt(o.legs[0].stops[0])}</span></div><div class="legs">${legsHTML(o)}</div></div>
       </button>`).join("")
     : `<div class="pNone"><div class="b">Não há mais opções ${isToday?"hoje":dayLbl}.</div></div>`;
   list.querySelectorAll(".opt").forEach(x=> x.onclick=()=> openTrip(opts[+x.dataset.i]));
