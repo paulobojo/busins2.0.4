@@ -211,7 +211,7 @@ button{font:inherit; color:inherit; border:0; background:none; padding:0; cursor
 .sec .ttl{font-size:20px !important; letter-spacing:-.015em;}
 .sec .m{color:var(--sub) !important; font-weight:500 !important;}
 .note b{color:var(--ink) !important;}
-.bestK{color:var(--sub) !important;}
+.bestK{color:var(--acc) !important;}
 .row:not(.on){padding:12px 22px !important; align-items:center !important;}
 .row:not(.on) .name{font-size:17px !important; line-height:1.25 !important;}
 .row:not(.on) .via{display:none !important;}
@@ -402,7 +402,25 @@ html,body{height:auto !important;}
 .sjmDet .ver{color:var(--ink); font-weight:600; text-decoration:underline; text-underline-offset:3px;}
 .sjmDet[open] .ver{display:none;}
 .xf .tight{margin-left:4px;}
-.opt .tt{font-weight:600 !important;}
+.opt .tt{font-weight:600 !important; font-size:30px !important; letter-spacing:-.02em !important;}
+/* números de linha com contorno */
+.chip, .nxLine{background:transparent !important; color:var(--ink) !important; box-shadow:inset 0 0 0 1.5px var(--ink); font-weight:700 !important;}
+.opt.pastOpt .tt, .opt.pastOpt .ttFrom, .opt.pastOpt .legs, .opt.pastOpt .legs *{color:#A8A8A5 !important;}
+.opt.pastOpt .chip{box-shadow:inset 0 0 0 1.5px #BDBDBA !important;}
+.opt.pastOpt .tight, .opt.pastOpt .altLine{display:none !important;}
+.nxOne{font-size:16px !important;}
+.nxOne .nxLine{display:inline-block !important; margin:0 6px 0 0 !important; vertical-align:1px;}
+.nxOne .inRed{white-space:nowrap;}
+.nw{white-space:nowrap;}
+.nxOne .chip{margin-right:6px; vertical-align:1px;}
+.opt.bestOpt{position:relative;}
+.bestTag{flex-basis:100%; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--acc); margin-bottom:4px;}
+.opt.bestOpt{flex-wrap:wrap;}
+#pList .pastBtn2{margin:14px 22px;}
+.pastRow{display:block; width:100%; text-align:center; padding:14px 22px; font-size:14px; font-weight:500; color:var(--sub); border-bottom:1px solid var(--rule);}
+.pastRow:active{background:var(--soft);}
+.pastRow .chev{display:inline-block; margin-left:4px; font-size:15px; transform:translateY(-2px);}
+.pastRow .chev.up{transform:rotate(180deg) translateY(-2px);}
 </style>
 </head>
 <body>
@@ -439,7 +457,7 @@ html,body{height:auto !important;}
     <div class="pSegWrap"><div class="seg" id="pSeg"><div class="segThumb" id="pThumb"></div></div></div>
     <div id="pSjmTop"></div>
     <div id="pBest"></div>
-    <div id="pOtherHead"><div class="sec"><div class="ttl">Outras opções</div><div class="m" id="pCount"></div></div>
+    <div id="pOtherHead"><div class="sec"><div class="ttl">Todas as opções</div><div class="m" id="pCount"></div></div>
     <div class="rule"></div></div>
     <div id="pList"></div>
     <div id="pSjmBottom"></div>
@@ -504,8 +522,7 @@ function renderNext(){
   const inTxt = d<=0 ? "Agora" : "daqui a " + (h ? `${h}h${m?pad(m):""}` : `${m} min`);
   box.innerHTML = `
     <div class="nxTop"><span class="nxTime num">${trips[i][0]}</span></div>
-    <div class="bestArr">Sai ${fromTxt(dirData.stops[0])} · <span class="inRed">${inTxt}</span></div>
-    <div class="nxRoute"><span class="nxLine">Linha ${DATA[state.line].title}</span></div>`;
+    <div class="bestArr nxOne"><span class="nxLine">${DATA[state.line].title}</span> Sai ${fromTxt(dirData.stops[0])} <span class="nw">· <span class="inRed">${inTxt}</span></span></div>`;
   box.onclick = ()=> openStops(dirData, trips[i]);
 }
 
@@ -584,7 +601,7 @@ function renderAll(){ holidayBanner(); renderNext(); renderLines(); renderTimes(
 function closeSheet(){ document.getElementById("ov").classList.remove("show"); }
 function openStops(dirData, trip){
   const stops = dirData.stops;
-  document.getElementById("sK").textContent = `Linha ${DATA[state.line].title} · Partida`;
+  document.getElementById("sK").textContent = `${DATA[state.line].title} · Partida`;
   document.getElementById("sT").textContent = trip[0];
   document.getElementById("sS").textContent = `${dirData.label} · ${stops.length} paragens`;
   document.getElementById("stops").innerHTML = stops.map((n,i)=>
@@ -616,7 +633,7 @@ const OAZ_VDC = [
 ];
 const MIN_XFER = 5; // minutos mínimos para a troca
 const TIGHT = 10;   // abaixo disto, avisar que a troca é apertada
-let pstate = { dir:"ida", per:"esc", spin:false, day:today() };
+let pstate = { dir:"ida", per:"esc", spin:false, day:today(), showPast:false };
 
 function fromMin(m){ return pad(Math.floor(m/60))+":"+pad(m%60); }
 function durTxt(m){ const h=Math.floor(m/60), r=m%60; return h ? `${h}h${r?pad(r):""}` : `${r} min`; }
@@ -774,16 +791,25 @@ function destName(o){ const L = pstate.dir==="ida" ? o.legs[o.legs.length-1] : o
 
 function fromTxt(n){ if(/Campanh/.test(n)) return "de Campanhã"; if(/Camélias/.test(n)) return "das Camélias"; if(/Vale de Cambra/.test(n)) return "de Vale de Cambra"; if(/S\. João da Madeira/.test(n)) return "de S. João da Madeira"; return "de "+n; }
 function toTxt(n){ if(/Campanh/.test(n)) return "para Campanhã"; if(/Camélias/.test(n)) return "para as Camélias"; if(/Vale de Cambra/.test(n)) return "para Vale de Cambra"; if(/S\. João da Madeira/.test(n)) return "para S. João da Madeira"; return "para "+n; }
-function legsHTML(o, withTimes=true){
+function bestRest(o){
+  const A=o.legs[0], B=o.legs[1], Z=B||A, dest=Z.stops[Z.stops.length-1];
+  if(!o.xfer){
+    const porto = /Campanh|Camélias/.test(dest);
+    return (porto||o.wk) ? `<div class="legs"><span class="from">Direto ${toTxt(dest)}</span></div>` : `<div class="legs"><span class="from">Direto</span></div>`;
+  }
+  const w=o.xfer.wait;
+  return `<div class="legs"><span class="chain">→ S. João da Madeira → <span class="chip">${B.line}</span> ${toTxt(dest)}</span><span class="xf">O ${B.line} sai às <b class="num">${B.t[0]}</b> · ${w<TIGHT?`<span class="tight">Troca apertada · ${w} min</span>`:`${w} min para a troca`}</span>${w<TIGHT&&o.xfer.alt?`<div class="altLine">Se perderes a ligação, há o ${o.xfer.alt.line} das ${fromMin(o.xfer.alt.dep)} e chegas às ${fromMin(o.xfer.alt.arr)}.</div>`:""}</div>`;
+}
+function legsHTML(o, withTimes=true, past=false){
   const A=o.legs[0], B=o.legs[1], Z=B||A;
   const orig=A.stops[0], dest=Z.stops[Z.stops.length-1];
   const porto = n => /Campanh|Camélias/.test(n);
   if(!o.xfer){
     const showTo = porto(dest) || o.wk || o.sjmOnly;
-    return `<span class="chip">${A.line}</span> <span class="from">${showTo?toTxt(dest):"Direto"}</span>`;
+    return `<span class="chip">${A.line}</span> <span class="from">Direto${showTo?" "+toTxt(dest):""}</span>`;
   }
   const w = o.xfer.wait;
-  return `<span class="chain"><span class="chip">${A.line}</span> → S. João da Madeira → <span class="chip">${B.line}</span> ${toTxt(dest)}</span><span class="xf">O ${B.line} sai às <b class="num">${B.t[0]}</b> · ${w<TIGHT?`<span class="tight">Troca apertada · ${w} min</span>`:`${w} min para a troca`}</span>${w<TIGHT&&o.xfer.alt?`<div class="altLine">Se perderes a ligação, há o ${o.xfer.alt.line} das ${fromMin(o.xfer.alt.dep)} e chegas às ${fromMin(o.xfer.alt.arr)}.</div>`:""}`;
+  return `<span class="chain"><span class="chip">${A.line}</span> → S. João da Madeira → <span class="chip">${B.line}</span> ${toTxt(dest)}</span><span class="xf">O ${B.line} sai às <b class="num">${B.t[0]}</b> · ${w<TIGHT&&!past?`<span class="tight">Troca apertada · ${w} min</span>`:`${w} min para a troca`}</span>${w<TIGHT&&!past&&o.xfer.alt?`<div class="altLine">Se perderes a ligação, há o ${o.xfer.alt.line} das ${fromMin(o.xfer.alt.dep)} e chegas às ${fromMin(o.xfer.alt.arr)}.</div>`:""}`;
 }
 
 function nextDayWithService(){
@@ -799,7 +825,7 @@ function renderPSeg(){
     const btn=document.createElement("button");
     btn.className="segBtn"+(d===pstate.day?" active":"");
     btn.innerHTML=DAYS[d]+(d===today()?'<span class="td">hoje</span>':"");
-    btn.onclick=()=>{ pstate.day=d; renderPorto(); };
+    btn.onclick=()=>{ pstate.day=d; pstate.showPast=false; renderPorto(); };
     seg.appendChild(btn);
   });
   document.getElementById("pThumb").style.transform=`translateX(${keys.indexOf(pstate.day)*100}%)`;
@@ -815,7 +841,7 @@ function renderPorto(){
     <div class="route" id="pRoute"><div class="k">De</div><div class="v">${a}</div><div class="gap"></div><div class="k">Para</div><div class="v">${b}</div></div>
     <button class="inv ${pstate.spin?"spin":""}" id="pSwap" aria-label="Inverter sentido">${SWAP}</button></div>`;
   document.getElementById("pSwap").onclick = ()=>{
-    pstate.dir = pstate.dir==="ida"?"volta":"ida"; pstate.spin=!pstate.spin;
+    pstate.dir = pstate.dir==="ida"?"volta":"ida"; pstate.spin=!pstate.spin; pstate.showPast=false;
     if(navigator.vibrate) navigator.vibrate(8);
     document.getElementById("pSwap").classList.toggle("spin", pstate.spin);
     document.getElementById("pRoute").classList.add("fade");
@@ -824,7 +850,9 @@ function renderPorto(){
   document.getElementById("pPer").innerHTML = "";
   renderPSeg();
 
-  const opts = portoOptions(dt).filter(o=>o.dep>=now);
+  const allOpts = portoOptions(dt);
+  const opts = allOpts.filter(o=>o.dep>=now);
+  const pastOpts = allOpts.filter(o=>o.dep<now);
   const hasOpts = opts.length>0;
   const sjmL = sjmOnlyToday(dt, now);
   const sT=document.getElementById("pSjmTop"), sB=document.getElementById("pSjmBottom");
@@ -832,10 +860,18 @@ function renderPorto(){
   sB.innerHTML = hasOpts ? sjmHTML(sjmL, false, isSel) : "";
   [sT,sB].forEach(box=> box.querySelectorAll(".opt.sjm").forEach(x=> x.onclick=()=> openTrip(sjmL[+x.dataset.s])));
   const best = document.getElementById("pBest"), list=document.getElementById("pList");
-  document.getElementById("pOtherHead").hidden = !hasOpts;
+  const optRow = (o,idx,past,isBest) => `<button class="opt${past?" pastOpt":""}${isBest?" bestOpt":""}" data-${past?"p":"i"}="${idx}">
+      <div class="mid"><div class="tt num">${fromMin(o.dep)} <span class="ttFrom">${fromTxt(o.legs[0].stops[0])}</span></div><div class="legs">${legsHTML(o,true,past)}</div></div>
+      </button>`;
+  const pastToggle = pastOpts.length ? `<button class="pastRow" id="pPastBtn">${pstate.showPast?"Esconder anteriores":`${pastOpts.length} ${pastOpts.length===1?"horário anterior":"horários anteriores"}`} <span class="chev ${pstate.showPast?"up":""}">⌄</span></button>` : "";
+  const pastHTML = pastOpts.map((o,k)=>optRow(o,k,true)).join("");
+  const bindToggle = ()=>{ const b=document.getElementById("pPastBtn"); if(b) b.onclick=()=>{ pstate.showPast=!pstate.showPast; renderPorto(); }; };
+  const bindPast = ()=> list.querySelectorAll(".opt.pastOpt").forEach(x=> x.onclick=()=> openTrip(pastOpts[+x.dataset.p]));
+  document.getElementById("pOtherHead").hidden = !hasOpts && !pastOpts.length;
   if(!hasOpts){
     best.innerHTML = sjmL.length ? "" : `<div class="pNone"><div class="a">${isSel?"Hoje já não há autocarros":"Não há autocarros neste dia"}</div></div>`;
-    list.innerHTML = ""; setPNote(dt); return;
+    document.getElementById("pCount").textContent = pastOpts.length ? "já passaram" : "";
+    list.innerHTML = pastHTML; bindPast(); setPNote(dt); return;
   }
   const isToday = isSel, dayLbl = "neste dia";
   const o0 = opts[0];
@@ -845,17 +881,14 @@ function renderPorto(){
     <button class="best" id="bestBtn">
       <div class="bestK">${isToday ? "A melhor opção" : "Primeira do dia"}</div>
       <div class="nxTop"><span class="nxTime num">${fromMin(o0.dep)}</span></div>
-      <div class="bestArr">Sai ${fromTxt(o0.legs[0].stops[0])}${isToday?` · <span class="inRed">${inTxt}</span>`:""}</div>
-      <div class="legs">${legsHTML(o0)}</div>
+      <div class="bestArr nxOne"><span class="chip">${o0.legs[0].line}</span> Sai ${fromTxt(o0.legs[0].stops[0])}${isToday?` <span class="nw">· <span class="inRed">${inTxt}</span></span>`:""}</div>
+      ${bestRest(o0)}
     </button>`;
   document.getElementById("bestBtn").onclick = ()=> openTrip(o0);
-  const rest = opts.slice(1);
-  document.getElementById("pCount").textContent = rest.length ? `${rest.length} ${isToday?"hoje":dayLbl}` : "";
-  list.innerHTML = rest.length ? rest.map((o,i)=>`<button class="opt" data-i="${i+1}">
-      <div class="mid"><div class="tt num">${fromMin(o.dep)} <span class="ttFrom">${fromTxt(o.legs[0].stops[0])}</span></div><div class="legs">${legsHTML(o)}</div></div>
-      </button>`).join("")
-    : `<div class="pNone"><div class="b">Não há mais opções ${isToday?"hoje":dayLbl}.</div></div>`;
-  list.querySelectorAll(".opt").forEach(x=> x.onclick=()=> openTrip(opts[+x.dataset.i]));
+  document.getElementById("pCount").textContent = `${opts.length} ${isToday?"hoje":dayLbl}`;
+  list.innerHTML = pastToggle + (pstate.showPast ? pastHTML : "") + opts.map((o,i)=>optRow(o,i,false,i===0)).join("");
+  list.querySelectorAll(".opt:not(.pastOpt)").forEach(x=> x.onclick=()=> openTrip(opts[+x.dataset.i]));
+  bindPast(); bindToggle();
   setPNote(dt);
 }
 function setPNote(dt){
@@ -902,3 +935,4 @@ setInterval(()=>{ tick(); renderNext(); renderTimes(); }, 30000);
 </script>
 </body>
 </html>
+
